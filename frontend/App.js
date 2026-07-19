@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-import * as Flashlight from 'expo-flashlight';
+
 import { Accelerometer } from 'expo-sensors';
 
 export default function App() {
@@ -57,13 +57,9 @@ export default function App() {
     return recording.current.getURI();
   }
 
-  // FLASHLIGHT SOS
-  async function sosLight() {
-    for(let i=0; i<6; i++){
-      await Flashlight.toggleAsync();
-      await new Promise(r => setTimeout(r, 300));
-    }
-  }
+  
+    
+  
 
   // MAIN PANIC
   const handlePanic = async () => {
