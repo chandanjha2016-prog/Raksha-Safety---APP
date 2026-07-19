@@ -1,11 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, SafeAreaView, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
-
-import { Accelerometer } from 'expo-sensors';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
@@ -13,21 +11,6 @@ export default function App() {
   const [isHolding, setIsHolding] = useState(false);
   const holdTimer = useRef(null);
   const recording = useRef(null);
-  const [shakeEnabled, setShakeEnabled] = useState(true);
-
-  // SHAKE TO ALERT
-  useEffect(() => {
-    Accelerometer.setUpdateInterval(500);
-    const subscription = Accelerometer.addListener(accelData => {
-      let total = Math.abs(accelData.x) + Math.abs(accelData.y) + Math.abs(accelData.z);
-      if (total > 3 && shakeEnabled) { // Jor se hilao
-        handlePanic();
-        setShakeEnabled(false);
-        setTimeout(() => setShakeEnabled(true), 10000); // 10 sec baad dubara
-      }
-    });
-    return () => subscription.remove();
-  }, [shakeEnabled]);
 
   // CONTACT SAVE SCREEN
   if(screen === 'contacts'){
@@ -53,13 +36,12 @@ export default function App() {
     recording.current = rec;
   }
   async function stopRecording() {
-    await recording.current.stopAndUnloadAsync();
-    return recording.current.getURI();
+    if(recording.current){
+      await recording.current.stopAndUnloadAsync();
+      return recording.current.getURI();
+    }
+    return null;
   }
-
-  
-    
-  
 
   // MAIN PANIC
   const handlePanic = async () => {
@@ -67,7 +49,6 @@ export default function App() {
 
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     await startRecording();
-    sosLight();
 
     let location = await Location.getCurrentPositionAsync({});
     let link = `https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`;
@@ -77,9 +58,8 @@ export default function App() {
     if (isAvailable) { await SMS.sendSMSAsync(contacts.filter(c=>c), message); }
 
     setTimeout(async () => {
-      let audioUri = await stopRecording();
-      Linking.openURL(`tel:112`); // Police Call
-      Alert.alert("HELP SENT", `1. Family ko SMS\n2. Audio Recorded\n3. Police 112 Call\n4. Flashlight SOS`);
+      await stopRecording();
+      Alert.alert("HELP SENT", `1. Family ko SMS\n2. Audio Recorded\n3. Police 112 Call hota real APK me`);
     }, 10000);
   };
 
@@ -104,7 +84,7 @@ export default function App() {
         <Text style={styles.buttonText}>🆘</Text>
         <Text style={styles.buttonLabel}>{isHolding? "SENDING HELP..." : "HOLD 3 SEC"}</Text>
       </TouchableOpacity>
-      <Text style={styles.footer}>Tip: Phone ko jor se hilao = Auto Alert</Text>
+      <Text style={styles.footer}>Tip: APK me Police Call + Flashlight chalega</Text>
     </SafeAreaView>
   );
 }
