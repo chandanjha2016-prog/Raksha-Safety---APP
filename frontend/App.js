@@ -1,21 +1,39 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, Button, SafeAreaView } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, SafeAreaView, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
 import { Audio } from 'expo-av';
+import * as Haptics from 'expo-haptics';
+import * as Flashlight from 'expo-flashlight';
+import { Accelerometer } from 'expo-sensors';
 
 export default function App() {
   const [screen, setScreen] = useState('home');
   const [contacts, setContacts] = useState(['', '', '']);
   const [isHolding, setIsHolding] = useState(false);
   const holdTimer = useRef(null);
+  const recording = useRef(null);
+  const [shakeEnabled, setShakeEnabled] = useState(true);
 
-  // 1. CONTACT SAVE SCREEN
+  // SHAKE TO ALERT
+  useEffect(() => {
+    Accelerometer.setUpdateInterval(500);
+    const subscription = Accelerometer.addListener(accelData => {
+      let total = Math.abs(accelData.x) + Math.abs(accelData.y) + Math.abs(accelData.z);
+      if (total > 3 && shakeEnabled) { // Jor se hilao
+        handlePanic();
+        setShakeEnabled(false);
+        setTimeout(() => setShakeEnabled(true), 10000); // 10 sec baad dubara
+      }
+    });
+    return () => subscription.remove();
+  }, [shakeEnabled]);
+
+  // CONTACT SAVE SCREEN
   if(screen === 'contacts'){
     return(
       <SafeAreaView style={styles.container}>
         <Text style={styles.title}>Emergency Contacts</Text>
-        <Text style={styles.subtitle}>3 Numbers daalo</Text>
         {contacts.map((c, i) => (
           <TextInput key={i} style={styles.input} placeholder={`Contact ${i+1} Number`}
             keyboardType="phone-pad" maxLength={10} value={c}
@@ -28,80 +46,83 @@ export default function App() {
     )
   }
 
-  // 2. PANIC FUNCTION
-  const handlePanic = async () => {
-    if(contacts.filter(c=>c).length === 0){
-      Alert.alert("Pehle Contact Add Karo");
-      return;
-    }
+  // AUDIO RECORD
+  async function startRecording() {
+    await Audio.requestPermissionsAsync();
+    const { recording: rec } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+    recording.current = rec;
+  }
+  async function stopRecording() {
+    await recording.current.stopAndUnloadAsync();
+    return recording.current.getURI();
+  }
 
-    // Location
-    let { status } = await Location.requestForegroundPermissionsAsync();
+  // FLASHLIGHT SOS
+  async function sosLight() {
+    for(let i=0; i<6; i++){
+      await Flashlight.toggleAsync();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+
+  // MAIN PANIC
+  const handlePanic = async () => {
+    if(contacts.filter(c=>c).length === 0){ Alert.alert("Pehle Contact Add Karo"); return; }
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    await startRecording();
+    sosLight();
+
     let location = await Location.getCurrentPositionAsync({});
     let link = `https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`;
-    let message = `🚨 RAKSHA ALERT! Mujhe help chahiye.\nLocation: ${link}`;
+    let message = `🚨 RAKSHA ALERT! Help chahiye.\nLive Location: ${link}`;
 
-    // SMS
     const isAvailable = await SMS.isAvailableAsync();
-    if (isAvailable) {
-      await SMS.sendSMSAsync(contacts.filter(c=>c), message);
-    }
-    
-    // Siren Sound
-    const { sound } = await Audio.Sound.createAsync(require('./assets/siren.mp3'));
-    await sound.playAsync();
-    setTimeout(() => sound.unloadAsync(), 5000);
+    if (isAvailable) { await SMS.sendSMSAsync(contacts.filter(c=>c), message); }
 
-    Alert.alert("Help Bhej Di Gayi!", "Family aur Police ko alert mil gaya");
+    setTimeout(async () => {
+      let audioUri = await stopRecording();
+      Linking.openURL(`tel:112`); // Police Call
+      Alert.alert("HELP SENT", `1. Family ko SMS\n2. Audio Recorded\n3. Police 112 Call\n4. Flashlight SOS`);
+    }, 10000);
   };
 
-  // 3. HOLD LOGIC
-  const startHold = () => {
-    setIsHolding(true);
-    holdTimer.current = setTimeout(() => {
-      handlePanic();
-      setIsHolding(false);
-    }, 3000);
-  };
-  const cancelHold = () => {
-    clearTimeout(holdTimer.current);
-    setIsHolding(false);
-  };
+  // HOLD LOGIC
+  const startHold = () => { setIsHolding(true); holdTimer.current = setTimeout(handlePanic, 3000); };
+  const cancelHold = () => { clearTimeout(holdTimer.current); setIsHolding(false); };
 
-  // 4. HOME SCREEN
+  // HOME SCREEN
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>RAKSHA</Text>
-      <Text style={styles.subtitle}>Your Safety Partner</Text>
-      
+      <Text style={styles.title}>RAKSHA 2.0</Text>
+      <Text style={styles.subtitle}>National Safety App</Text>
+
       <TouchableOpacity style={styles.smallButton} onPress={() => setScreen('contacts')}>
         <Text style={styles.smallButtonText}>Set Emergency Contacts</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.button, isHolding && styles.buttonActive]}
-        onPressIn={startHold}
-        onPressOut={cancelHold}
+        onPressIn={startHold} onPressOut={cancelHold}
       >
         <Text style={styles.buttonText}>🆘</Text>
-        <Text style={styles.buttonLabel}>{isHolding ? "Hold..." : "HOLD 3 SEC"}</Text>
+        <Text style={styles.buttonLabel}>{isHolding? "SENDING HELP..." : "HOLD 3 SEC"}</Text>
       </TouchableOpacity>
-      
-      <Text style={styles.footer}>Press and hold for 3 seconds</Text>
+      <Text style={styles.footer}>Tip: Phone ko jor se hilao = Auto Alert</Text>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0f0f1e', alignItems: 'center', justifyContent: 'center', padding: 20 },
-  title: { fontSize: 32, fontWeight: 'bold', color: '#e94560', marginBottom: 5 },
+  container: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  title: { fontSize: 34, fontWeight: 'bold', color: '#ff2d55', marginBottom: 5 },
   subtitle: { fontSize: 16, color: '#aaa', marginBottom: 30 },
-  input: { backgroundColor: '#2a2a4e', color: '#fff', width: '90%', padding: 15, margin: 10, borderRadius: 12, fontSize: 16 },
-  button: { width: 220, height: 220, borderRadius: 110, backgroundColor: '#e94560', alignItems: 'center', justifyContent: 'center', marginTop: 40, elevation: 15 },
-  buttonActive: { backgroundColor: '#ff2d55', transform: [{ scale: 1.08 }] },
-  buttonText: { color: '#fff', fontSize: 60 },
+  input: { backgroundColor: '#1a1a1a', color: '#fff', width: '90%', padding: 15, margin: 10, borderRadius: 12, fontSize: 16, borderWidth: 1, borderColor: '#ff2d55' },
+  button: { width: 230, height: 230, borderRadius: 115, backgroundColor: '#ff2d55', alignItems: 'center', justifyContent: 'center', marginTop: 40, elevation: 20 },
+  buttonActive: { backgroundColor: '#ff0000', transform: [{ scale: 1.1 }] },
+  buttonText: { color: '#fff', fontSize: 70 },
   buttonLabel: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginTop: 5 },
-  smallButton: { backgroundColor: '#2a2a4e', padding: 15, borderRadius: 12, margin: 10, width: '80%' },
+  smallButton: { backgroundColor: '#1a1a1a', padding: 15, borderRadius: 12, margin: 10, width: '80%', borderWidth: 1, borderColor: '#ff2d55' },
   smallButtonText: { color: '#fff', textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
-  footer: { color: '#666', marginTop: 30, fontSize: 14 }
+  footer: { color: '#666', marginTop: 20, fontSize: 12 }
 });
