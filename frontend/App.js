@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, SafeAreaView, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, TextInput, SafeAreaView } from 'react-native';
 import * as Location from 'expo-location';
 import * as SMS from 'expo-sms';
 import { Audio } from 'expo-av';
@@ -59,7 +59,7 @@ export default function App() {
 
     setTimeout(async () => {
       await stopRecording();
-      Alert.alert("HELP SENT", `1. Family ko SMS\n2. Audio Recorded\n3. Police 112 Call hota real APK me`);
+      Alert.alert("🚨 RAKSHA ALERT", `Emergency SMS + Location sent\nAudio Recorded\nPolice 112 call hoga APK me`);
     }, 10000);
   };
 
@@ -70,8 +70,8 @@ export default function App() {
   // HOME SCREEN
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>RAKSHA 2.0</Text>
-      <Text style={styles.subtitle}>National Safety App</Text>
+      <Text style={styles.title}>Raksha Safety App</Text>
+      <Text style={styles.subtitle}>Press 3 seconds for help</Text>
 
       <TouchableOpacity style={styles.smallButton} onPress={() => setScreen('contacts')}>
         <Text style={styles.smallButtonText}>Set Emergency Contacts</Text>
@@ -81,24 +81,20 @@ export default function App() {
         style={[styles.button, isHolding && styles.buttonActive]}
         onPressIn={startHold} onPressOut={cancelHold}
       >
-        <Text style={styles.buttonText}>🆘</Text>
-        <Text style={styles.buttonLabel}>{isHolding? "SENDING HELP..." : "HOLD 3 SEC"}</Text>
+        <Text style={styles.buttonText}>🆘 PANIC</Text>
       </TouchableOpacity>
-      <Text style={styles.footer}>Tip: APK me Police Call + Flashlight chalega</Text>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center', padding: 20 },
-  title: { fontSize: 34, fontWeight: 'bold', color: '#ff2d55', marginBottom: 5 },
-  subtitle: { fontSize: 16, color: '#aaa', marginBottom: 30 },
-  input: { backgroundColor: '#1a1a1a', color: '#fff', width: '90%', padding: 15, margin: 10, borderRadius: 12, fontSize: 16, borderWidth: 1, borderColor: '#ff2d55' },
-  button: { width: 230, height: 230, borderRadius: 115, backgroundColor: '#ff2d55', alignItems: 'center', justifyContent: 'center', marginTop: 40, elevation: 20 },
-  buttonActive: { backgroundColor: '#ff0000', transform: [{ scale: 1.1 }] },
-  buttonText: { color: '#fff', fontSize: 70 },
-  buttonLabel: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginTop: 5 },
-  smallButton: { backgroundColor: '#1a1a1a', padding: 15, borderRadius: 12, margin: 10, width: '80%', borderWidth: 1, borderColor: '#ff2d55' },
+  container: { flex: 1, backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
+  subtitle: { fontSize: 14, color: '#9ca3af', marginBottom: 30 },
+  input: { backgroundColor: '#1f2937', color: '#fff', width: '90%', padding: 15, margin: 10, borderRadius: 12, fontSize: 16 },
+  button: { width: 230, height: 230, borderRadius: 115, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center', marginTop: 40 },
+  buttonActive: { backgroundColor: '#dc2626', transform: [{ scale: 1.1 }] },
+  buttonText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+  smallButton: { backgroundColor: '#1f2937', padding: 15, borderRadius: 12, marginBottom: 20, width: '80%' },
   smallButtonText: { color: '#fff', textAlign: 'center', fontSize: 16, fontWeight: 'bold' },
-  footer: { color: '#666', marginTop: 20, fontSize: 12 }
 });
