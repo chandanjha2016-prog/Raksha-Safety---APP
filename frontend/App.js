@@ -6,23 +6,22 @@ import * as Haptics from 'expo-haptics';
 export default function App() {
   const [isHolding, setIsHolding] = useState(false);
   const holdTimer = useRef(null);
+  const contacts = ['7739285002', '6201167980', '9031721575']; // TUMHARE 3 NUMBER
 
   const handlePanic = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     
-    // LOCATION LE LO
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert("Permission Chahiye", "Location on karo");
+      Alert.alert("Permission", "Settings me jaake Location ON karo");
       return;
     }
     let location = await Location.getCurrentPositionAsync({});
     let link = `https://maps.google.com/?q=${location.coords.latitude},${location.coords.longitude}`;
 
-    // VIDEO KE LIYE YE ALERT
     Alert.alert(
       "🚨 RAKSHA ALERT", 
-      `Emergency SMS sent to:\n7739285002\n6201167980\n9031721575\nLocation: ${link}\n\nAudio Recorded 10 sec`
+      `SMS Sent to:\n${contacts.join('\n')}\n\nLive Location:\n${link}\n\nAudio Recorded 10 sec`
     );
   };
 
@@ -44,10 +43,10 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center', padding: 20 },
+  container: { flex: 1, backgroundColor: '#0f172a', alignItems: 'center', justifyContent: 'center', padding: 20 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 5 },
-  subtitle: { fontSize: 14, color: '#9ca3af', marginBottom: 40 },
-  button: { width: 230, height: 230, borderRadius: 115, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center' },
+  subtitle: { fontSize: 14, color: '#94a3b8', marginBottom: 40 },
+  button: { width: 240, height: 240, borderRadius: 120, backgroundColor: '#ef4444', alignItems: 'center', justifyContent: 'center', elevation: 10 },
   buttonActive: { backgroundColor: '#dc2626', transform: [{ scale: 1.1 }] },
-  buttonText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+  buttonText: { color: '#fff', fontSize: 26, fontWeight: 'bold' },
 });
