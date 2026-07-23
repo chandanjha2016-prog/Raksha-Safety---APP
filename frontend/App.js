@@ -72,7 +72,7 @@ export default function App() {
     
   const sendAlert = async () => {
   contacts.forEach(contact => {
-    const numberWith91 = contact.startsWith("+91") ? contact : "+91" + contact;
+    const numberWith91 = contact.startsWith("+917739285002") ? contact : "+91" + contact;
     SMS.sendSMSAsync(numberWith91, message); // <-- contact ki jagah numberWith91
   })
 }
@@ -80,7 +80,7 @@ export default function App() {
 
     // AUTO POLICE CALL 5 SEC BAAD
     setTimeout(() => {
-      Alert.alert("Auto Call", "5 sec me 112 par call lagegi", [
+      Alert.alert("Auto Call", "5 sec me +917739285002 par call lagegi", [
         {text: "Cancel", onPress: () => {}},
         {text: "Call Now", onPress: () => Linking.openURL('tel:112')}
       ]);
