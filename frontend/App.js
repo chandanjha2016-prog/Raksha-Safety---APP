@@ -107,9 +107,9 @@ export default function App() {
           <Text style={styles.smallText}>Hold 3 sec</Text>
         </TouchableOpacity>
 
-        {/* MANUAL 112 CALL */}
+        {/* MANUAL +917739285002 CALL */}
         <TouchableOpacity style={styles.govtButton} onPress={() => Linking.openURL('tel:112')}>
-          <Text style={styles.govtText}>📞 Call Police 112</Text>
+          <Text style={styles.govtText}>📞 Call Police +917739285002</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.settingsBtn} onPress={() => setShowSettings(true)}>
