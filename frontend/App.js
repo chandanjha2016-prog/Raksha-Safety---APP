@@ -69,8 +69,14 @@ export default function App() {
     if (validContacts.length === 0) return Alert.alert("Error", "Pehle contacts add karo");
 
     // SMS SEND
-    const isAvailable = await SMS.isAvailableAsync();
-    if (isAvailable) { await SMS.sendSMSAsync(validContacts, message); }
+    
+  const sendAlert = async () => {
+  contacts.forEach(contact => {
+    const numberWith91 = contact.startsWith("+91") ? contact : "+91" + contact;
+    SMS.sendSMSAsync(numberWith91, message); // <-- contact ki jagah numberWith91
+  })
+}
+        
 
     // AUTO POLICE CALL 5 SEC BAAD
     setTimeout(() => {
